@@ -1,1 +1,1 @@
-Display updates will go here
+Custom conf file for ILI9488 3.5"or 4" LCD with horizontal VU Meters. Place this file in youryoradio-main\yoRadio\src\displays\conf\ directory
