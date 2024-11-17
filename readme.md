@@ -14,4 +14,7 @@ This has Theme support so you customize the colors new line added to mytheme.h #
 myoptions.h has 3 new lines use these to setup your sensor defaults are\
 #define BME_SCL 41 // Use your pin number\
 #define BME_SDA 42 // Use your pin number\ 
-#define BMP280_ADDRESS   0x76 // I2C address of sensor sometimes 0x77\
+#define BMP280_ADDRESS   0x76 // I2C address of sensor sometimes 0x77
+Requires Addfruit BME280 library\
+ \
+ 
