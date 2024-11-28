@@ -5,7 +5,7 @@
 #include "display.h"
 #include "player.h"
 #include "network.h"
-
+#include "bmesupport.h"
 
 Display display;
 #ifdef USE_NEXTION
@@ -128,6 +128,11 @@ void Display::_buildPager(){
   #ifndef HIDE_RSSI
     _rssi = new TextWidget(rssiConf, 20, false, config.theme.rssi, config.theme.background);
   #endif
+  //Added by Jman
+  #ifndef HIDE_TEMP
+    _temp = new TextWidget(tempConf, 30, false, config.theme.temp, config.theme.background); // Added by Jman
+  #endif
+  
   _nums.init(numConf, 10, false, config.theme.digit, config.theme.background);
   #ifndef HIDE_WEATHER
     _weather = new ScrollWidget("\007", weatherConf, config.theme.weather, config.theme.background);
@@ -137,6 +142,7 @@ void Display::_buildPager(){
   if(_voltxt)   _footer.addWidget( _voltxt);
   if(_volip)    _footer.addWidget( _volip);
   if(_rssi)     _footer.addWidget( _rssi);
+  if(_temp)     _footer.addWidget(_temp); // Added by Jman
   if(_heapbar)  _footer.addWidget( _heapbar);
   
   if(_metabackground) pages[PG_PLAYER]->addWidget( _metabackground);
@@ -433,6 +439,7 @@ void Display::loop() {
       	break;
       }
       case DSPRSSI: if(_rssi){ _setRSSI(request.payload); } if (_heapbar && config.store.audioinfo) _heapbar->setValue(player.isRunning()?player.inBufferFilled():0); break;
+	  case DSPTEMP: if(_temp){_setTemp();} break; //Added by Jman put sensor values here
       case PSTART: _layoutChange(true);   break;
       case PSTOP:  _layoutChange(false);  break;
       case DSP_START: _start();  break;
@@ -447,7 +454,24 @@ void Display::loop() {
   }
   dsp.loop();
 }
+// Below added by Jman
+void Display::_setTemp() {
+  if(!_temp) return;
+ #ifndef BMEUNSUPPORTED
+  float Tfloat;
+  float Hfloat;
+  char TempHum[14] = {0};
+  char* TChar = "oC";
+  char HChar = '%';
+  Tfloat=(bme.readTemperature());
+  Hfloat=(bme.readHumidity());
+  sprintf(TempHum, "%.1f%s %.0f%c", Tfloat, TChar, Hfloat, HChar);
+  _temp->setText(TempHum, tempFmt);  
+ #endif 
+ return;
 
+}
+///////////////////
 void Display::_setRSSI(int rssi) {
   if(!_rssi) return;
 #if RSSI_DIGIT

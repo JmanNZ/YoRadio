@@ -259,6 +259,15 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
   #define RTC_SCL               255
 #endif
 
+/*        BME                    */
+#ifndef BME_SDA
+  #define BME_SDA               255
+  #define BMEUNSUPPORTED
+#endif
+#ifndef BME_SCL
+  #define BME_SCL               255
+#endif
+
 /*        ESP DEVBOARD            */
 //#ifndef LED_BUILTIN
 //  #define LED_BUILTIN   255
@@ -407,6 +416,9 @@ The connection tables are located here https://github.com/e2002/yoradio#connecti
 #endif
 #ifndef COLOR_RSSI
   #define COLOR_RSSI              165, 162, 132
+#endif
+#ifndef COLOR_TEMP
+  #define COLOR_TEMP               165, 162, 132   // Added by Jman
 #endif
 #ifndef COLOR_VOLBAR_OUT
   #define COLOR_VOLBAR_OUT        231, 211,  90

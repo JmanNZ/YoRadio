@@ -12,7 +12,8 @@ enum displayMode_e { PLAYER, VOL, STATIONS, NUMBERS, LOST, UPDATING, INFO, SETTI
 enum pages_e      : uint8_t  { PG_PLAYER=0, PG_DIALOG=1, PG_PLAYLIST=2 };
 //enum dialogType_e : uint8_t  { DG_NONE=0,   DG_VOLUME=1, DG_LOST=2, DG_UPDATING=3, DG_NEXTION=4 };
 
-enum displayRequestType_e { BOOTSTRING, NEWMODE, CLOCK, NEWTITLE, NEWSTATION, NEXTSTATION, DRAWPLAYLIST, DRAWVOL, DBITRATE, AUDIOINFO, SHOWVUMETER, DSPRSSI, SHOWWEATHER, NEWWEATHER, PSTOP, PSTART, DSP_START, WAITFORSD, SDFILEINDEX, NEWIP };
+// Below edited by Jman
+enum displayRequestType_e { BOOTSTRING, NEWMODE, CLOCK, NEWTITLE, NEWSTATION, NEXTSTATION, DRAWPLAYLIST, DRAWVOL, DBITRATE, AUDIOINFO, SHOWVUMETER, DSPRSSI, DSPTEMP, SHOWWEATHER, NEWWEATHER, PSTOP, PSTART, DSP_START, WAITFORSD, SDFILEINDEX, NEWIP };
 struct requestParams_t
 {
   displayRequestType_e type;
@@ -62,7 +63,7 @@ class Display {
     ProgressWidget _testprogress;
     ClockWidget _clock;
     Page *_boot;
-    TextWidget *_bootstring, *_volip, *_voltxt, *_rssi, *_bitrate;
+	TextWidget *_bootstring, *_volip, *_voltxt, *_rssi, *_temp, *_bitrate;
     Ticker _returnTicker;
     uint8_t _bootStep;
     void _time(bool redraw = false);
@@ -80,6 +81,7 @@ class Display {
     void _setReturnTicker(uint8_t time_s);
     void _layoutChange(bool played);
     void _setRSSI(int rssi);
+	void _setTemp(); // Added by Jman
 };
 
 #else

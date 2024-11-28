@@ -46,6 +46,17 @@ void Config::init() {
 		BOOTLOG("[ERROR] - Couldn't find RTC");
 	}
 #endif
+
+// Added by Jman
+#if BMESUPPORTED
+	BOOTLOG("BME280 I2C:(SDA=%d,SCL=%d)", BME_SDA, BME_SCL);
+	if(bme.init()){
+		BOOTLOG("BME280 found");
+	}else{
+		BOOTLOG("[ERROR] - Couldn't find BME280");
+	}
+#endif
+////////////////////////////////////
   emptyFS = true;
 #if IR_PIN!=255
     irindex=-1;
@@ -382,6 +393,7 @@ void Config::loadTheme(){
   theme.ip            = color565(COLOR_IP);
   theme.vol           = color565(COLOR_VOLUME_VALUE);
   theme.rssi          = color565(COLOR_RSSI);
+  theme.temp          = color565(COLOR_TEMP);  // Added by Jman
   theme.bitrate       = color565(COLOR_BITRATE);
   theme.volbarout     = color565(COLOR_VOLBAR_OUT);
   theme.volbarin      = color565(COLOR_VOLBAR_IN);
@@ -556,6 +568,7 @@ void Config::setTitle(const char* title) {
   netserver.requestOnChange(TITLE, 0);
   netserver.loop();
   display.putRequest(NEWTITLE);
+  display.putRequest(DSPTEMP); // Added by jman
 }
 
 void Config::setStation(const char* station) {

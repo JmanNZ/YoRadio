@@ -7,6 +7,7 @@
 #include "SD.h"
 #include "options.h"
 #include "rtcsupport.h"
+#include "bmesupport.h"
 
 #define EEPROM_SIZE       768
 #define EEPROM_START      500
@@ -68,6 +69,7 @@ struct theme_t {
   uint16_t ip;
   uint16_t vol;
   uint16_t rssi;
+  uint16_t temp;  // Added by Jman
   uint16_t bitrate;
   uint16_t volbarout;
   uint16_t volbarin;
