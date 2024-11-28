@@ -42,13 +42,14 @@ const WidgetConfig bitrateConf    PROGMEM = { 6, 62, 2, WA_RIGHT };
 const WidgetConfig voltxtConf     PROGMEM = { 0, DSP_HEIGHT-38, 2, WA_CENTER };
 const WidgetConfig  iptxtConf     PROGMEM = { TFT_FRAMEWDT, DSP_HEIGHT-38, 2, WA_LEFT };
 const WidgetConfig   rssiConf     PROGMEM = { TFT_FRAMEWDT, DSP_HEIGHT-38-6, 3, WA_RIGHT };
+const WidgetConfig  tempConf      PROGMEM = { 100, DSP_HEIGHT-80, 2, WA_LEFT }; // Addded by Jman
 const WidgetConfig numConf        PROGMEM = { 0, 200, 70, WA_CENTER };
 const WidgetConfig apNameConf     PROGMEM = { TFT_FRAMEWDT, 88, 3, WA_CENTER };
 const WidgetConfig apName2Conf    PROGMEM = { TFT_FRAMEWDT, 120, 3, WA_CENTER };
 const WidgetConfig apPassConf     PROGMEM = { TFT_FRAMEWDT, 173, 3, WA_CENTER };
 const WidgetConfig apPass2Conf    PROGMEM = { TFT_FRAMEWDT, 205, 3, WA_CENTER };
 const WidgetConfig  clockConf     PROGMEM = { 16, 224, 70, WA_RIGHT };  /* 52 is a fixed font size. do not change */
-const WidgetConfig vuConf         PROGMEM = { TFT_FRAMEWDT, 136, 1, WA_CENTER };
+const WidgetConfig vuConf         PROGMEM = { TFT_FRAMEWDT, 136, 1, WA_LEFT };
 
 const WidgetConfig bootWdtConf    PROGMEM = { 0, 216, 1, WA_CENTER };
 const ProgressConfig bootPrgConf  PROGMEM = { 90, 14, 4 };
@@ -60,6 +61,7 @@ const VUBandsConfig bandsConf     PROGMEM = { 32, 130, 4, 2, 10, 10 };
 /* STRINGS  */
 const char         numtxtFmt[]    PROGMEM = "%d";
 const char           rssiFmt[]    PROGMEM = "WiFi %d";
+const char           tempFmt[]    PROGMEM = "%srH"; // Added by jman 
 const char          iptxtFmt[]    PROGMEM = "%s";
 const char         voltxtFmt[]    PROGMEM = "\023\025%d";
 const char        bitrateFmt[]    PROGMEM = "%d kBs";

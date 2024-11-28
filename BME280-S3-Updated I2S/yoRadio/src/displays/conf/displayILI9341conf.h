@@ -8,6 +8,7 @@
 #ifndef displayILI9341conf_h
 #define displayILI9341conf_h
 
+#define DSP_HEIGHT      240
 #define DSP_WIDTH       320
 #define TFT_FRAMEWDT    8
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT*2
@@ -41,6 +42,7 @@ const WidgetConfig bitrateConf    PROGMEM = { 70, 191, 1, WA_LEFT };
 const WidgetConfig voltxtConf     PROGMEM = { 0, 214, 1, WA_CENTER };
 const WidgetConfig  iptxtConf     PROGMEM = { TFT_FRAMEWDT, 214, 1, WA_LEFT };
 const WidgetConfig   rssiConf     PROGMEM = { TFT_FRAMEWDT, 214-6, 2, WA_RIGHT };
+const WidgetConfig tempConf       PROGMEM = { TFT_FRAMEWDT, 180, 1, WA_CENTER }; // Added by Jman
 const WidgetConfig numConf        PROGMEM = { 0, 120+30, 52, WA_CENTER };
 const WidgetConfig apNameConf     PROGMEM = { TFT_FRAMEWDT, 66, 2, WA_CENTER };
 const WidgetConfig apName2Conf    PROGMEM = { TFT_FRAMEWDT, 90, 2, WA_CENTER };
@@ -59,6 +61,7 @@ const VUBandsConfig bandsConf     PROGMEM = { 24, 100, 4, 2, 10, 2 };
 /* STRINGS  */
 const char         numtxtFmt[]    PROGMEM = "%d";
 const char           rssiFmt[]    PROGMEM = "WiFi %d";
+const char           tempFMT[]    PROGMEM = "Temp %s"; // Added by jman 
 const char          iptxtFmt[]    PROGMEM = "IP %s";
 const char         voltxtFmt[]    PROGMEM = "Vol %d";
 const char        bitrateFmt[]    PROGMEM = "%d kBs";
