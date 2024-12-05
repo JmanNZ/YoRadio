@@ -16,7 +16,7 @@
  * ============================================================================================================
  */
 #include "Arduino.h"
-#include "SPI.h"
+#include "SPI.h"  //Added by Jmano9
 #include "src/core/options.h"
 #include "src/core/config.h"
 #include "src/core/telnet.h"
@@ -37,7 +37,7 @@ void setup() {
   Serial.begin(115200);
   if(LED_BUILTIN!=255) pinMode(LED_BUILTIN, OUTPUT);
   if (yoradio_on_setup) yoradio_on_setup();
-  SPI2.begin(TFT_CLK, TFT_MISO, TFT_MOSI, TFT_CS); //Added by Jman
+ SPI2.begin(TFT_CLK, TFT_MISO, TFT_MOSI, TFT_CS); //Added by Jman
   config.init();
   display.init();
   player.init();
@@ -53,19 +53,11 @@ void setup() {
     display.putRequest(WAITFORSD, 0);
     Serial.print("##[BOOT]#\tSD search\t");
   }
-    
+  
   delay(BOOTDELAY);  // Logo boot delay eye candy :) Added by Jman
-    
   config.initPlaylistMode();
   netserver.begin();
   telnet.begin();
- ArduinoOTA.onStart([]() {
-    Serial.println("Firware Update Started");
-    player.sendCommand({PR_STOP, 0});
-  });
-ArduinoOTA.setHostname("YoRadio");
-ArduinoOTA.begin();
-  
   initControls();
   display.putRequest(DSP_START);
   while(!display.ready()) delay(10);
@@ -75,15 +67,17 @@ ArduinoOTA.begin();
   if (config.getMode()==PM_SDCARD) player.initHeaders(config.station.url);
   player.lockOutput=false;
   if (config.store.smartstart == 1) player.sendCommand({PR_PLAY, config.store.lastStation});
+  ArduinoOTA.setHostname("YoRadio");
+  ArduinoOTA.begin();
 }
 
 void loop() {
   telnet.loop();
   if (network.status == CONNECTED || network.status==SDREADY) {
     player.loop();
-   ArduinoOTA.handle();
-    //loopControls();
+  ArduinoOTA.handle();
   }
   loopControls();
   netserver.loop();
+
 }
