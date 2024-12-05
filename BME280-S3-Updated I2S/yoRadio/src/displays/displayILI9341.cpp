@@ -3,12 +3,8 @@
 
 #include "displayILI9341.h"
 #include "fonts/bootlogo.h"
-#include "../core/spidog.h"
 #include "../core/config.h"
 #include "../core/network.h"
-
-#define TAKE_MUTEX() sdog.takeMutex()
-#define GIVE_MUTEX() sdog.giveMutex()
 
 #if DSP_HSPI
 DspCore::DspCore(): Adafruit_ILI9341(&SPI2, TFT_DC, TFT_CS, TFT_RST) {}
@@ -16,30 +12,10 @@ DspCore::DspCore(): Adafruit_ILI9341(&SPI2, TFT_DC, TFT_CS, TFT_RST) {}
 DspCore::DspCore(): Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST) {}
 #endif
 
-/*
-    @brief  Instantiate Adafruit ILI9341 driver with hardware SPI using
-            a specific SPI peripheral (not necessarily default).
-    @param  spiClass  Pointer to SPI peripheral (e.g. &SPI or &SPI1).
-    @param  dc        Data/Command pin # (required).
-    @param  cs        Chip select pin # (optional, pass -1 if unused and
-                      CS is tied to GND).
-    @param  rst       Reset pin # (optional, pass -1 if unused).
-
-**************************************************************************
-Adafruit_ILI9341::Adafruit_ILI9341(SPIClass *spiClass, int8_t dc, int8_t cs,
-                                   int8_t rst)
-    : Adafruit_SPITFT(ILI9341_TFTWIDTH, ILI9341_TFTHEIGHT, spiClass, cs, dc,
-                      rst) {}
-#endif // end !ESP8266
-*/
-
-
-
 #include "tools/utf8RusGFX.h"
 
-
 void DspCore::initDisplay() {
-  begin( TFT_Frequency);           /* SPI_DEFAULT_FREQ 40000000 */
+  begin();             /* SPI_DEFAULT_FREQ 40000000 */
   invert();
   cp437(true);
   flip();
@@ -173,13 +149,11 @@ void DspCore::clearClock(){
 }
 
 void DspCore::startWrite(void) {
-  TAKE_MUTEX();
   Adafruit_ILI9341::startWrite();
 }
 
 void DspCore::endWrite(void) {
   Adafruit_ILI9341::endWrite();
-  GIVE_MUTEX();
 }
 
 void DspCore::loop(bool force) { }

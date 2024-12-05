@@ -24,7 +24,7 @@
 
 #define BOOTDELAY         5000 // Logo delay in Milli Secoonds
 
-#define VSPI FSPI
+//#define VSPI FSPI
 
 #define VS1053_CS           255          /*  XCS pin. Should be set to 255 if the board is not used */
 
@@ -36,10 +36,10 @@
 #define TS_HSPI             true
 #define TS_CS 				      15
 
-//#define SD_HSPI             false
-#define SDC_CS              48    // Dummy Pin as CS is tied low
-#define SD_SPIPINS          13, 11, 14
+// #define SD_HSPI             true
+#define SDC_CS              4           // Dummy Pin as CS is tied low
+#define SD_SPIPINS          13, 11, 14  // SCK, MISO, MOSI
 
-//#define IR_PIN              4
+//#define IR_PIN            48
 
 #endif

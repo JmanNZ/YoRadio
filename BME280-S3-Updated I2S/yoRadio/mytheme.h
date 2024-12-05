@@ -23,7 +23,7 @@
 #define COLOR_CLOCK_BG    5,  5,  9
 #define COLOR_SECONDS    0,  255,  255
 #define COLOR_DAY_OF_W    255,  0,  0
-#define COLOR_DATE    0,  0,  255
+#define COLOR_DATE    255,  255,  255
 #define COLOR_BUFFER    157,  171,  251
 #define COLOR_IP    255,  255,  0
 #define COLOR_VOLUME_VALUE    255,  0,  132

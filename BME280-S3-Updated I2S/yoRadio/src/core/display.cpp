@@ -76,11 +76,11 @@ void Display::init() {
 void Display::_bootScreen(){
   _boot = new Page();
   _boot->addWidget(new ProgressWidget(bootWdtConf, bootPrgConf, BOOT_PRG_COLOR, 0));
-  _bootstring = (TextWidget*) &_boot->addWidget(new TextWidget(bootstrConf, 250, true, BOOT_TXT_COLOR, 0)); //250 was 50
+  _bootstring = (TextWidget*) &_boot->addWidget(new TextWidget(bootstrConf, 50, true, BOOT_TXT_COLOR, 0));
   _pager.addPage(_boot);
   _pager.setPage(_boot, true);
   dsp.drawLogo(bootLogoTop);
- _bootStep = 1;
+  _bootStep = 1;
 }
 
 void Display::_buildPager(){
@@ -132,7 +132,6 @@ void Display::_buildPager(){
   #ifndef HIDE_TEMP
     _temp = new TextWidget(tempConf, 30, false, config.theme.temp, config.theme.background); // Added by Jman
   #endif
-  
   _nums.init(numConf, 10, false, config.theme.digit, config.theme.background);
   #ifndef HIDE_WEATHER
     _weather = new ScrollWidget("\007", weatherConf, config.theme.weather, config.theme.background);

@@ -10,10 +10,9 @@
  */
  
 #include "../core/options.h"
-#include "../core/spidog.h"
 #if VS1053_CS==255
  
-#include "Audio.h"
+#include "AudioEx.h"
 #include "aac_decoder/aac_decoder.h"
 #include "flac_decoder/flac_decoder.h"
 #include "mp3_decoder/mp3_decoder.h"

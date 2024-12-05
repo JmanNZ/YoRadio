@@ -11,9 +11,9 @@ void audio_info(const char *info) {
   #ifdef USE_NEXTION
     nextion.audioinfo(info);
   #endif
-  if (strstr(info, "format is mp3")  != NULL) { config.setBitrateFormat(BF_MP3); display.putRequest(DBITRATE); }
   if (strstr(info, "format is aac")  != NULL) { config.setBitrateFormat(BF_AAC); display.putRequest(DBITRATE); }
   if (strstr(info, "format is flac") != NULL) { config.setBitrateFormat(BF_FLAC); display.putRequest(DBITRATE); }
+  if (strstr(info, "format is mp3")  != NULL) { config.setBitrateFormat(BF_MP3); display.putRequest(DBITRATE); }
   if (strstr(info, "format is wav")  != NULL) { config.setBitrateFormat(BF_WAV); display.putRequest(DBITRATE); }
   if (strstr(info, "format is ogg")  != NULL) { config.setBitrateFormat(BF_OGG); display.putRequest(DBITRATE); }
   if (strstr(info, "format is vorbis")  != NULL) { config.setBitrateFormat(BF_VOR); display.putRequest(DBITRATE); }
