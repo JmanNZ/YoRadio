@@ -19,7 +19,7 @@
 #define BME_SCL           41 // I2C Data
 #define BME_SDA           42 //I2C Clk
 #define BMP280_ADDRESS    0x76
-
+#define BATTERY_OFF       true
 #define SEALEVELPRESSURE_HPA 1013.25
 
 #define BOOTDELAY         5000 // Logo delay in Milli Secoonds

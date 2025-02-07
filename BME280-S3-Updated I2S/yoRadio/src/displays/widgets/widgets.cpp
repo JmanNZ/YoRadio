@@ -148,10 +148,8 @@ void ScrollWidget::setText(const char* txt) {
     } else {
       dsp.fillRect(_config.left, _config.top, _width, _textheight, _bgcolor);
       dsp.setCursor(_realLeft(), _config.top);
-      //dsp.setClipping({_config.left, _config.top, _width, _textheight});
       dsp.setClipping({_config.left, _config.top, _width, _textheight});
       dsp.print(_text);
-      //dsp.clearClipping();
       dsp.clearClipping();
     }
     strlcpy(_oldtext, _text, _buffsize);
@@ -290,18 +288,21 @@ void VuWidget::init(WidgetConfig wconf, VUBandsConfig bands, uint16_t vumaxcolor
 void VuWidget::_draw(){
   if(!_active || _locked) return;
 #if !defined(USE_NEXTION) && I2S_DOUT==255
-  static uint8_t cc = 0;
+/*  static uint8_t cc = 0;
   cc++;
   if(cc>0){
     player.getVUlevel();
     cc=0;
-  }
+  }*/
 #endif
   static uint16_t measL, measR;
   uint16_t bandColor;
   uint16_t dimension = _config.align?_bands.width:_bands.height;
-  uint8_t L = map(player.vuLeft, 255, 0, 0, dimension);
-  uint8_t R = map(player.vuRight, 255, 0, 0, dimension);
+  uint16_t vulevel = player.get_VUlevel(dimension);
+
+  uint8_t L = (vulevel >> 8) & 0xFF;
+  uint8_t R = vulevel & 0xFF;
+
   bool played = player.isRunning();
   if(played){
     measL=(L>=measL)?measL + _bands.fadespeed:L;
@@ -473,7 +474,7 @@ void BitrateWidget::init(BitrateConfig bconf, uint16_t fgcolor, uint16_t bgcolor
 
 void BitrateWidget::setBitrate(uint16_t bitrate){
   _bitrate = bitrate;
-  if(_bitrate>999) _bitrate=999;
+//  if(_bitrate>999) _bitrate = 999;
   _draw();
 }
 
@@ -495,7 +496,11 @@ void BitrateWidget::_draw(){
   dsp.setFont();
   dsp.setTextSize(_config.textsize);
   dsp.setTextColor(_fgcolor, _bgcolor);
-  snprintf(_buf, 6, "%d", _bitrate);
+  if(_bitrate < 999)  snprintf(_buf, 6, "%d", _bitrate);
+  else {
+    float _br = (float)_bitrate / 1000;
+    snprintf(_buf, 6, "%.1f", _br);
+  }
 
 //  dsp.setCursor(_config.left + _dimension/2 - _charWidth*strlen(_buf)/2 + 1, _config.top + _dimension/4 - _textheight/2+1);
   dsp.setCursor(_config.left + _dimension/2 - _charWidth*strlen(_buf)/2 + 1, _config.top + _dimension/4 - _textheight/2 + 2);
@@ -511,7 +516,6 @@ void BitrateWidget::_draw(){
     case BF_FLAC: dsp.print("flc"); break;
     case BF_WAV:  dsp.print("wav"); break;
     case BF_OGG:  dsp.print("ogg"); break;
-    case BF_M4A:  dsp.print("m4a"); break;
     case BF_VOR:  dsp.print("vor"); break;
     case BF_OPU:  dsp.print("opu"); break;
     default:                        break;

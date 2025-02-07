@@ -72,9 +72,9 @@ const char        apPassTxt[]    PROGMEM = "PASSWORD";
 const char       bootstrFmt[]    PROGMEM = "Trying to %s";
 const char        apSettFmt[]    PROGMEM = "SETTINGS PAGE ON: HTTP://%s/";
 #if EXT_WEATHER
-const char       weatherFmt[]    PROGMEM = "%s, %.1f\011C \007 Feels like: %.1f\011C \007 Pressure: %d mbar \007 Humidity: %s%% \007 Wind: %.1f m/s [%s]"; // мм
+const char       weatherFmt[]    PROGMEM = "%s, %.1f\011C \007 feels like: %.1f\011C \007 pressure: %d mbar \007 humidity: %s%% \007 wind: %.1f m/s [%s]";
 #else
-const char       weatherFmt[]    PROGMEM = "%s, %.1f\011C \007 Pressure: %d mbar \007 Humidity: %s%%"; //%d mm
+const char       weatherFmt[]    PROGMEM = "%s, %.1f\011C \007 pressure: %d mbar \007 humidity: %s%%";
 #endif
 const char     weatherUnits[]    PROGMEM = "metric";   /* standard, metric, imperial */
 const char      weatherLang[]    PROGMEM = "en";       /* https://openweathermap.org/current#multi */

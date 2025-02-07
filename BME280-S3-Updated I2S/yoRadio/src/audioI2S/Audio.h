@@ -1,13 +1,15 @@
-#include "esp_arduino_version.h"
 /*
  * Audio.h
  *
  *  Created on: Oct 28,2018
  *
- *  Version 3.0.13v
- *  Updated on: Nov 22.2024
+ *  Version 3.0.13z
+ *  Updated on: Dec 16.2024, Dec 18.2024 (Maleksm)
  *      Author: Wolle (schreibfaul1)
  */
+#if I2S_DOUT!=255
+
+#include "esp_arduino_version.h"
 
 #pragma once
 #pragma GCC optimize ("Ofast")
@@ -27,10 +29,7 @@
 #include <codecvt>
 #include <locale>
 
-#if ESP_ARDUINO_VERSION_MAJOR >= 3
-#include <NetworkClient.h>
-#include <NetworkClientSecure.h>
-#endif
+//#include <SPI.h>
 
 #if ESP_IDF_VERSION_MAJOR == 5
 #include <driver/i2s_std.h>
@@ -43,7 +42,7 @@
 #endif
 
 #ifndef AUDIOBUFFER_MULTIPLIER2
-   #define AUDIOBUFFER_MULTIPLIER2    10
+   #define AUDIOBUFFER_MULTIPLIER2    10		// 10
 #endif
 
 using namespace std;
@@ -67,6 +66,18 @@ extern __attribute__((weak)) void audio_eof_stream(const char*); // The webstrea
 extern __attribute__((weak)) void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, uint8_t bitsPerSample, uint8_t channels, bool *continueI2S); // record audiodata or send via BT
 extern __attribute__((weak)) void audio_log(uint8_t logLevel, const char* msg, const char* arg);
 
+extern __attribute__((weak)) void audio_id3artist(const char*);
+extern __attribute__((weak)) void audio_id3album(const char*);
+extern __attribute__((weak)) void audio_id3title(const char*);
+extern __attribute__((weak)) void audio_beginSDread();
+extern __attribute__((weak)) void audio_progress(uint32_t startpos, uint32_t endpos);
+extern __attribute__((weak)) void audio_error(const char*);
+
+#define AUDIO_INFO(...) { sprintf(m_ibuff, m_ibuffSize, __VA_ARGS__); if(audio_info) audio_info(m_ibuff); }
+//#define AUDIO_ERROR(...) { sprintf(m_ibuff, m_ibuffSize, __VA_ARGS__); if(audio_error) audio_error(m_ibuff); }
+
+#define AUDIO_INFO(...) { sprintf(m_ibuff, __VA_ARGS__); if(audio_info) audio_info(m_ibuff); }
+#define AUDIO_ERROR(...) { sprintf(m_ibuff, __VA_ARGS__); if(audio_error) audio_error(m_ibuff); }
 //----------------------------------------------------------------------------------------------------------------------
 
 class AudioBuffer {
@@ -119,14 +130,15 @@ public:
     bool     havePSRAM() { return m_f_psram; };
 
 protected:
-    size_t            m_buffSizePSRAM    = UINT16_MAX * 10;   // most webstreams limit the advance to 100...300Kbytes
-    size_t            m_buffSizeRAM      = 1600 * 10;
+    size_t            m_buffSizePSRAM    = UINT16_MAX * 10;   // most webstreams limit ( 65535 * 10)
+//    size_t   m_buffSizePSRAM    = 327675;   // most webstreams limit the advance to 100...300Kbytes
+    size_t            m_buffSizeRAM      = 1600 * AUDIOBUFFER_MULTIPLIER2;
     size_t            m_buffSize         = 0;
     size_t            m_freeSpace        = 0;
     size_t            m_writeSpace       = 0;
     size_t            m_dataLength       = 0;
     size_t            m_resBuffSizeRAM   = 2048;     // reserved buffspace, >= one wav  frame
-    size_t            m_resBuffSizePSRAM = 4096 * 4; // reserved buffspace, >= one flac frame
+    size_t            m_resBuffSizePSRAM = 4096 * 6; // reserved buffspace, >= one flac frame
     size_t            m_maxBlockSize     = 1600;
     uint8_t*          m_buffer           = NULL;
     uint8_t*          m_writePtr         = NULL;
@@ -150,9 +162,12 @@ public:
     Audio(bool internalDAC = false, uint8_t channelEnabled = 3, uint8_t i2sPort = I2S_NUM_0); // #99
     ~Audio();
     void setBufsize(int rambuf_sz, int psrambuf_sz);
-    bool openai_speech(const String& api_key, const String& model, const String& input, const String& voice, const String& response_format, const String& speed);
-    bool connecttohost(const char* host, const char* user = "", const char* pwd = "");
     bool connecttospeech(const char* speech, const char* lang);
+    bool openai_speech(const String& api_key, const String& model, const String& input, const String& voice, const String& response_format, const String& speed);
+    bool connecttohost(String host);
+    bool connecttohost(const char* host, const char* user = "", const char* pwd = "");
+    bool connecttoSD(String sdfile, int32_t resumeFilePos = -1);
+    bool connecttoSD(const char* path, int32_t resumeFilePos = -1);
     bool connecttoFS(fs::FS &fs, const char* path, int32_t m_fileStartPos = -1);
     bool setFileLoop(bool input);//TEST loop
     void setConnectionTimeout(uint16_t timeout_ms, uint16_t timeout_ms_ssl);
@@ -160,6 +175,7 @@ public:
     bool setFilePos(uint32_t pos);
     bool audioFileSeek(const float speed);
     bool setTimeOffset(int sec);
+//	    bool setPinout(uint8_t BCLK, uint8_t LRC, uint8_t DOUT, int8_t DIN = I2S_PIN_NO_CHANGE, int8_t MCK = I2S_PIN_NO_CHANGE);
     bool setPinout(uint8_t BCLK, uint8_t LRC, uint8_t DOUT, int8_t MCLK = I2S_GPIO_UNUSED);
     bool pauseResume();
     bool isRunning() {return m_f_running;}
@@ -167,10 +183,11 @@ public:
     uint32_t stopSong();
     void forceMono(bool m);
     void setBalance(int8_t bal = 0);
-    void setVolumeSteps(uint8_t steps);
-    void setVolume(uint8_t vol, uint8_t curve = 0);
+//    void setVolumeSteps(uint8_t steps);
+//    void setVolume(uint8_t vol, uint8_t curve = 0);
+    void setVolume(uint8_t vol);
     uint8_t getVolume();
-    uint8_t maxVolume();
+//    uint8_t maxVolume();
     uint8_t getI2sPort();
 
     uint32_t getAudioDataStartPos();
@@ -184,15 +201,14 @@ public:
     uint32_t getAudioCurrentTime();
     uint32_t getTotalPlayingTime();
     void       setDefaults(); 				// free buffers and set defaults
-	    /* VU METER */ // Jman
+    /* VU METER */
     void     setVUmeter() {};
-    uint16_t getVUlevel();
-    uint8_t  vuLeft, vuRight;
-	
-    void     cardLock(bool lock);
+    uint16_t getVUlevel() {};
+    uint16_t get_VUlevel(uint16_t dimension);
+//    uint8_t  vuLeft, vuRight;                  // average value of samples, left channel, right channel
+    esp_err_t i2s_mclk_pin_select(const uint8_t pin);
     bool     eofHeader;
-	
-	
+
     uint32_t inBufferFilled(); // returns the number of stored bytes in the inputbuffer
     uint32_t inBufferFree();   // returns the number of free bytes in the inputbuffer
     uint32_t inBufferSize();   // returns the size of the inputbuffer in bytes
@@ -200,6 +216,7 @@ public:
     void setI2SCommFMT_LSB(bool commFMT);
     int getCodec() {return m_codec;}
     const char *getCodecname() {return codecname[m_codec];}
+//	    void  unicode2utf8(char* buff, uint32_t len);
 
 private:
 
@@ -209,12 +226,10 @@ private:
         #define ESP_ARDUINO_VERSION_PATCH 0
     #endif
 
-  enum : int8_t { AUDIOLOG_PATH_IS_NULL = -1, AUDIOLOG_FILE_NOT_FOUND = -2, AUDIOLOG_OUT_OF_MEMORY = -3, AUDIOLOG_FILE_READ_ERR = -4,
-                  AUDIOLOG_M4A_ATOM_NOT_FOUND = -5,  AUDIOLOG_ERR_UNKNOWN = -127 };
+  enum : int8_t { AUDIOLOG_PATH_IS_NULL = -1, AUDIOLOG_FILE_NOT_FOUND = -2, AUDIOLOG_OUT_OF_MEMORY = -3, AUDIOLOG_FILE_READ_ERR = -4, AUDIOLOG_M4A_ATOM_NOT_FOUND = -5,  AUDIOLOG_ERR_UNKNOWN = -127 };
 
   void            UTF8toASCII(char* str);
   bool            latinToUTF8(char* buff, size_t bufflen, bool UTF8check = true);
- // void            setDefaults(); // free buffers and set defaults
   void            initInBuff();
   bool            httpPrint(const char* host);
   bool            httpRange(const char* host, uint32_t range);
@@ -279,6 +294,8 @@ private:
   static void     taskWrapper(void *param);
   void            audioTask();
   void            performAudioTask();
+  uint8_t         m_audioTaskCoreId = 1;
+  bool            m_f_audioTaskIsRunning = false;
 
   //+++ W E B S T R E A M  -  H E L P   F U N C T I O N S +++
   uint16_t readMetadata(uint16_t b, bool first = false);
@@ -301,7 +318,6 @@ private:
           p++;
       }
     }
-
 
 void trim(char *str) {
     char *start = str;  // keep the original pointer
@@ -395,7 +411,7 @@ void trim(char *str) {
         }
         return result;
     }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
     // some other functions
 uint64_t bigEndian(uint8_t* base, uint8_t numBytes, uint8_t shiftLeft = 8) {
     uint64_t result = 0;  // Use uint64_t for greater caching
@@ -409,7 +425,7 @@ uint64_t bigEndian(uint8_t* base, uint8_t numBytes, uint8_t shiftLeft = 8) {
     }
     return result;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
     bool b64encode(const char* source, uint16_t sourceLength, char* dest){
         size_t size = base64_encode_expected_len(sourceLength) + 1;
         char * buffer = (char *) malloc(size);
@@ -425,7 +441,7 @@ uint64_t bigEndian(uint8_t* base, uint8_t numBytes, uint8_t shiftLeft = 8) {
         }
         return false;
     }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
     char* urlencode(const char* str, bool spacesOnly){
         // Reserve memory for the result (3x the length of the input string, worst-case)
         char *encoded = x_ps_malloc(strlen(str) * 3 + 1);
@@ -451,7 +467,7 @@ uint64_t bigEndian(uint8_t* base, uint8_t numBytes, uint8_t shiftLeft = 8) {
         *p_encoded = '\0';  // Null-terminieren
         return encoded;
     }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
     void vector_clear_and_shrink(vector<char*>&vec){
         uint size = vec.size();
         for (int i = 0; i < size; i++) {
@@ -463,7 +479,7 @@ uint64_t bigEndian(uint8_t* base, uint8_t numBytes, uint8_t shiftLeft = 8) {
         vec.clear();
         vec.shrink_to_fit();
     }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
     uint32_t simpleHash(const char* str){
         if(str == NULL) return 0;
         uint32_t hash = 0;
@@ -473,21 +489,21 @@ uint64_t bigEndian(uint8_t* base, uint8_t numBytes, uint8_t shiftLeft = 8) {
         }
         return hash;
 	  }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
     char* x_ps_malloc(uint16_t len) {
         char* ps_str = NULL;
         if(psramFound()){ps_str = (char*) ps_malloc(len);}
         else             {ps_str = (char*)    malloc(len);}
         return ps_str;
     }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
     char* x_ps_calloc(uint16_t len, uint8_t size) {
         char* ps_str = NULL;
         if(psramFound()){ps_str = (char*) ps_calloc(len, size);}
         else             {ps_str = (char*)    calloc(len, size);}
         return ps_str;
     }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
     char* x_ps_strdup(const char* str) {
         if(!str) return strdup(""); // better not to return NULL
         char* ps_str = NULL;
@@ -496,11 +512,11 @@ uint64_t bigEndian(uint8_t* base, uint8_t numBytes, uint8_t shiftLeft = 8) {
         strcpy(ps_str, str);
         return ps_str;
     }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
     void x_ps_free(void* b){
         if(b){free(b); b = NULL;}
     }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
 // Function to reverse the byte order of a 32-bit value (big-endian to little-endian)
     uint32_t bswap32(uint32_t x) {
         return ((x & 0xFF000000) >> 24) |
@@ -508,7 +524,7 @@ uint64_t bigEndian(uint8_t* base, uint8_t numBytes, uint8_t shiftLeft = 8) {
                ((x & 0x0000FF00) << 8)  |
                ((x & 0x000000FF) << 24);
     }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
 // Function to reverse the byte order of a 64-bit value (big-endian to little-endian)
     uint64_t bswap64(uint64_t x) {
         return ((x & 0xFF00000000000000ULL) >> 56) |
@@ -520,9 +536,6 @@ uint64_t bigEndian(uint8_t* base, uint8_t numBytes, uint8_t shiftLeft = 8) {
                ((x & 0x000000000000FF00ULL) << 40) |
                ((x & 0x00000000000000FFULL) << 56);
     }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-
 
 private:
     const char *codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS" };
@@ -531,12 +544,9 @@ private:
     enum : int { FORMAT_NONE = 0, FORMAT_M3U = 1, FORMAT_PLS = 2, FORMAT_ASX = 3, FORMAT_M3U8 = 4};
     enum : int { AUDIO_NONE, HTTP_RESPONSE_HEADER, AUDIO_DATA, AUDIO_LOCALFILE,
                  AUDIO_PLAYLISTINIT, AUDIO_PLAYLISTHEADER,  AUDIO_PLAYLISTDATA};
-    enum : int { FLAC_BEGIN = 0, FLAC_MAGIC = 1, FLAC_MBH =2, FLAC_SINFO = 3, FLAC_PADDING = 4, FLAC_APP = 5,
-                 FLAC_SEEK = 6, FLAC_VORBIS = 7, FLAC_CUESHEET = 8, FLAC_PICTURE = 9, FLAC_OKAY = 100};
-    enum : int { M4A_BEGIN = 0, M4A_FTYP = 1, M4A_CHK = 2, M4A_MOOV = 3, M4A_FREE = 4, M4A_TRAK = 5, M4A_MDAT = 6,
-                 M4A_ILST = 7, M4A_MP4A = 8, M4A_AMRDY = 99, M4A_OKAY = 100};
-    enum : int { CODEC_NONE = 0, CODEC_WAV = 1, CODEC_MP3 = 2, CODEC_AAC = 3, CODEC_M4A = 4, CODEC_FLAC = 5,
-                 CODEC_AACP = 6, CODEC_OPUS = 7, CODEC_OGG = 8, CODEC_VORBIS = 9};
+    enum : int { FLAC_BEGIN = 0, FLAC_MAGIC = 1, FLAC_MBH =2, FLAC_SINFO = 3, FLAC_PADDING = 4, FLAC_APP = 5, FLAC_SEEK = 6, FLAC_VORBIS = 7, FLAC_CUESHEET = 8, FLAC_PICTURE = 9, FLAC_OKAY = 100};
+    enum : int { M4A_BEGIN = 0, M4A_FTYP = 1, M4A_CHK = 2, M4A_MOOV = 3, M4A_FREE = 4, M4A_TRAK = 5, M4A_MDAT = 6, M4A_ILST = 7, M4A_MP4A = 8, M4A_AMRDY = 99, M4A_OKAY = 100};
+    enum : int { CODEC_NONE = 0, CODEC_WAV = 1, CODEC_MP3 = 2, CODEC_AAC = 3, CODEC_M4A = 4, CODEC_FLAC = 5, CODEC_AACP = 6, CODEC_OPUS = 7, CODEC_OGG = 8, CODEC_VORBIS = 9};
     enum : int { ST_NONE = 0, ST_WEBFILE = 1, ST_WEBSTREAM = 2};
     typedef enum { LEFTCHANNEL=0, RIGHTCHANNEL=1 } SampleIndex;
     typedef enum { LOWSHELF = 0, PEAKEQ = 1, HIFGSHELF =2 } FilterType;
@@ -554,16 +564,11 @@ private:
         int pids[4];
     } pid_array;
 
-    File                  audiofile;
-#ifndef ETHERNET_IF
-    WiFiClient            client;
-    WiFiClientSecure      clientsecure;
+    File                  audiofile;    // @suppress("Abstract class cannot be instantiated")
+    WiFiClient            client;       // @suppress("Abstract class cannot be instantiated")
+    WiFiClientSecure      clientsecure; // @suppress("Abstract class cannot be instantiated")
     WiFiClient*           _client = nullptr;
-#else
-    NetworkClient	      client;
-    NetworkClientSecure	  clientsecure;
-    NetworkClient*       _client = nullptr;
-#endif
+
     SemaphoreHandle_t     mutex_playAudioData;
     SemaphoreHandle_t     mutex_audioTask;
     TaskHandle_t          m_audioTaskHandle = nullptr;
@@ -587,7 +592,7 @@ private:
     const size_t    m_frameSizeWav    = 4096;
     const size_t    m_frameSizeMP3    = 1600;
     const size_t    m_frameSizeAAC    = 1600;
-    const size_t    m_frameSizeFLAC   = 4096 * 4;
+    const size_t    m_frameSizeFLAC   = 4096 * 6;
     const size_t    m_frameSizeOPUS   = 1024;
     const size_t    m_frameSizeVORBIS = 4096 * 2;
     const size_t    m_outbuffSize     = 4096 * 2;
@@ -595,6 +600,7 @@ private:
     static const uint8_t m_tsPacketSize  = 188;
     static const uint8_t m_tsHeaderSize  = 4;
 
+    uint8_t  vuLeft, vuRight;			// average value of samples, left channel, right channel
     char*           m_ibuff = nullptr;              // used in audio_info()
     char*           m_chbuf = NULL;
     uint16_t        m_chbufSize = 0;                // will set in constructor (depending on PSRAM)
@@ -606,6 +612,7 @@ private:
     filter_t        m_filter[3];                    // digital filters
     int             m_LFcount = 0;                  // Detection of end of header
     uint32_t        m_sampleRate=16000;
+    uint32_t        h_bitRate=0;                    // current bitrate given fom header
     uint32_t        m_bitRate=0;                    // current bitrate given fom decoder
     uint32_t        m_avr_bitrate = 0;              // average bitrate, median computed by VBR
     int             m_readbytes = 0;                // bytes read
@@ -613,11 +620,11 @@ private:
     int             m_controlCounter = 0;           // Status within readID3data() and readWaveHeader()
     int8_t          m_balance = 0;                  // -16 (mute left) ... +16 (mute right)
     uint16_t        m_vol = 21;                     // volume
-    uint8_t         m_vol_steps = 21;               // default
-    double          m_limit_left = 0;               // limiter 0 ... 1, left channel
-    double          m_limit_right = 0;              // limiter 0 ... 1, right channel
-    uint8_t         m_timeoutCounter = 0;           // timeout counter
-    uint8_t         m_curve = 0;                    // volume characteristic
+//    uint8_t         m_vol_steps = 254;               // default
+	    float            m_limit_left = 1;               // limiter for Gain, left channel
+	    float            m_limit_right = 1;             // limiter for Gain, right channel
+//    uint8_t         m_timeoutCounter = 0;           // timeout counter
+//    uint8_t         m_curve = 0;                    // volume characteristic
     uint8_t         m_bitsPerSample = 16;           // bitsPerSample
     uint8_t         m_channels = 2;
     uint8_t         m_i2s_num = I2S_NUM_0;          // I2S_NUM_0 or I2S_NUM_1
@@ -628,9 +635,8 @@ private:
     uint8_t         m_filterType[2];                // lowpass, highpass
     uint8_t         m_streamType = ST_NONE;
     uint8_t         m_ID3Size = 0;                  // lengt of ID3frame - ID3header
-   // uint8_t         m_vuLeft = 0;                   // average value of samples, left channel
-   // uint8_t         m_vuRight = 0;                  // average value of samples, right channel
-    uint8_t         m_audioTaskCoreId = 1;
+//    uint8_t         m_vuLeft = 0;                   // average value of samples, left channel
+//    uint8_t         m_vuRight = 0;                  // average value of samples, right channel
     uint8_t         m_M4A_objectType = 0;           // set in read_M4A_Header
     uint8_t         m_M4A_chConfig = 0;             // set in read_M4A_Header
     uint16_t        m_M4A_sampleRate = 0;           // set in read_M4A_Header
@@ -688,7 +694,6 @@ private:
     bool            m_f_psramFound = false;         // set in constructor, result of psramInit()
     bool            m_f_timeout = false;            //
     bool            m_f_commFMT = false;            // false: default (PHILIPS), true: Least Significant Bit Justified (japanese format)
-    bool            m_f_audioTaskIsRunning = false;
     bool            m_f_stream = false;             // stream ready for output?
     bool            m_f_decode_ready = false;       // if true data for decode are ready
     bool            m_f_eof = false;                // end of file
@@ -716,3 +721,4 @@ private:
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+#endif	// #if I2S_DOUT!=255

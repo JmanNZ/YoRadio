@@ -31,6 +31,7 @@
 //https://github.com/me-no-dev/ESPAsyncWebServer/issues/1410
 #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
 #include "mbedtls/compat-2.x.h"
+#include "rom/ets_sys.h"
 #endif
 
 #define MAX_PRINTF_LEN 64
@@ -833,11 +834,7 @@ void AsyncWebSocketClient::binary(AsyncWebSocketMessageBuffer * buffer)
 
 IPAddress AsyncWebSocketClient::remoteIP() {
     if(!_client) {
-#if ESP_IDF_VERSION_MAJOR < 5
-        return IPAddress(0U);
-#else
-        return IPAddress(0ul);
-#endif
+      return IPAddress((uint32_t)0);
     }
     return _client->remoteIP();
 }

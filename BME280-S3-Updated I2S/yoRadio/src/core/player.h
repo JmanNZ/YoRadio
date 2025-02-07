@@ -3,7 +3,7 @@
 #include "options.h"
 
 #if I2S_DOUT!=255 || I2S_INTERNAL
-  #include "../audioI2S/AudioEx.h"
+  #include "../audioI2S/Audio.h"
 #else
   #include "../audioVS1053/audioVS1053Ex.h"
 #endif
@@ -19,7 +19,7 @@
 #define PLERR_LN        64
 #define SET_PLAY_ERROR(...) {char buff[512 + 64]; sprintf(buff,__VA_ARGS__); setError(buff);}
 
-enum playerRequestType_e : uint8_t { PR_PLAY = 1, PR_STOP = 2, PR_PREV = 3, PR_NEXT = 4, PR_VOL = 5, PR_CHECKSD = 6 };
+enum playerRequestType_e : uint8_t { PR_PLAY = 1, PR_STOP = 2, PR_PREV = 3, PR_NEXT = 4, PR_VOL = 5, PR_CHECKSD = 6, PR_VUTONUS = 7 };
 struct playerRequestParams_t
 {
   playerRequestType_e type;

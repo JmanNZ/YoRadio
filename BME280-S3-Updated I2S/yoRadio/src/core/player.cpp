@@ -1,7 +1,5 @@
 #include "options.h"
-
 #include "player.h"
-
 #include "config.h"
 #include "telnet.h"
 #include "display.h"
@@ -93,6 +91,7 @@ void Player::setError(const char *e){
 }
 
 void Player::_stop(bool alreadyStopped){
+  log_i("%s called", __func__);
   if(config.getMode()==PM_SDCARD && !alreadyStopped) config.sdResumePos = player.getFilePos();
   _status = STOPPED;
   setOutputPins(false);
@@ -105,10 +104,11 @@ void Player::_stop(bool alreadyStopped){
   netserver.requestOnChange(BITRATE, 0);
   display.putRequest(DBITRATE);
   display.putRequest(PSTOP);
- // setDefaults();
+  setDefaults();
   if(!alreadyStopped) stopSong();
   if(!lockOutput) stopInfo();
   if (player_on_stop_play) player_on_stop_play();
+  pm.on_stop_play();
 }
 
 void Player::initHeaders(const char *file) {
@@ -123,11 +123,13 @@ void Player::initHeaders(const char *file) {
 #ifndef PL_QUEUE_TICKS
   #define PL_QUEUE_TICKS 0
 #endif
-
+#ifndef PL_QUEUE_TICKS_ST
+  #define PL_QUEUE_TICKS_ST 15
+#endif
 void Player::loop() {
   if(playerQueue==NULL) return;
   playerRequestParams_t requestP;
-  if(xQueueReceive(playerQueue, &requestP, PL_QUEUE_TICKS)){
+  if(xQueueReceive(playerQueue, &requestP, isRunning()?PL_QUEUE_TICKS:PL_QUEUE_TICKS_ST)){
     switch (requestP.type){
       case PR_STOP: _stop(); break;
       case PR_PLAY: {
@@ -136,6 +138,7 @@ void Player::loop() {
         }
         _play((uint16_t)abs(requestP.payload)); 
         if (player_on_station_change) player_on_station_change(); 
+        pm.on_station_change();
         break;
       }
       case PR_VOL: {
@@ -145,10 +148,17 @@ void Player::loop() {
       }
       #ifdef USE_SD
       case PR_CHECKSD: {
-        sdman.checkSD();
+        if(config.getMode()==PM_SDCARD){
+          if(!sdman.cardPresent()){
+            sdman.stop();
+            config.changeMode(PM_WEB);
+          }
+        }
         break;
       }
       #endif
+      case PR_VUTONUS:
+        if(config.vuThreshold>10) config.vuThreshold -=10;
       default: break;
     }
   }
@@ -168,16 +178,20 @@ void Player::loop() {
 }
 
 void Player::setOutputPins(bool isPlaying) {
-  if(LED_BUILTIN!=255) digitalWrite(LED_BUILTIN, LED_INVERT?!isPlaying:isPlaying);
+  if(REAL_LEDBUILTIN!=255) digitalWrite(REAL_LEDBUILTIN, LED_INVERT?!isPlaying:isPlaying);
   bool _ml = MUTE_LOCK?!MUTE_VAL:(isPlaying?!MUTE_VAL:MUTE_VAL);
   if(MUTE_PIN!=255) digitalWrite(MUTE_PIN, _ml);
 }
 
 void Player::_play(uint16_t stationId) {
+  log_i("%s called, stationId=%d", __func__, stationId);
   setError("");
   remoteStationName = false;
   config.setDspOn(1);
+  config.vuThreshold = 0;
   //display.putRequest(PSTOP);
+  config.screensaverTicks=SCREENSAVERSTARTUPDELAY;
+  config.screensaverPlayingTicks=SCREENSAVERSTARTUPDELAY;
   if(config.getMode()!=PM_SDCARD) {
   	display.putRequest(PSTOP);
   }
@@ -195,11 +209,10 @@ void Player::_play(uint16_t stationId) {
   netserver.loop();
   config.setSmartStart(0);
   bool isConnected = false;
-  if(config.getMode()==PM_SDCARD && SDC_CS!=255)
+  if(config.getMode()==PM_SDCARD && SDC_CS!=255){
     isConnected=connecttoFS(sdman,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos-player.sd_min);
-  else {
-  	config.store.play_mode=PM_WEB;
-  	config.save();
+  }else {
+    config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB));
   }
   if(config.getMode()==PM_WEB) isConnected=connecttohost(config.station.url);
   if(isConnected){
@@ -207,14 +220,16 @@ void Player::_play(uint16_t stationId) {
     _status = PLAYING;
     if(config.getMode()==PM_SDCARD) {
       config.sdResumePos = 0;
-      config.backupSDStation = stationId;
+      config.saveValue(&config.store.lastSdStation, stationId);
     }
     //config.setTitle("");
     config.setSmartStart(1);
     netserver.requestOnChange(MODE, 0);
     setOutputPins(true);
+    display.putRequest(NEWMODE, PLAYER);
     display.putRequest(PSTART);
     if (player_on_start_play) player_on_start_play();
+    pm.on_start_play();
   }else{
     telnet.printf("##ERROR#:\tError connecting to %s\n", config.station.url);
     SET_PLAY_ERROR("Error connecting to %s", config.station.url);
@@ -239,6 +254,7 @@ void Player::browseUrl(){
     setOutputPins(true);
     display.putRequest(PSTART);
     if (player_on_start_play) player_on_start_play();
+    pm.on_start_play();
   }else{
     telnet.printf("##ERROR#:\tError connecting to %s\n", burl);
     SET_PLAY_ERROR("Error connecting to %s", burl);
@@ -249,26 +265,29 @@ void Player::browseUrl(){
 #endif
 
 void Player::prev() {
-  if(config.getMode()==PM_WEB || !config.sdSnuffle){
-    if (config.store.lastStation == 1) config.store.lastStation = config.store.countStation; else config.store.lastStation--;
+  
+  uint16_t lastStation = config.lastStation();
+  if(config.getMode()==PM_WEB || !config.store.sdsnuffle){
+    if (lastStation == 1) config.lastStation(config.store.countStation); else config.lastStation(lastStation-1);
   }
-  sendCommand({PR_PLAY, config.store.lastStation});
+  sendCommand({PR_PLAY, config.lastStation()});
 }
 
 void Player::next() {
-  if(config.getMode()==PM_WEB || !config.sdSnuffle){
-    if (config.store.lastStation == config.store.countStation) config.store.lastStation = 1; else config.store.lastStation++;
+  uint16_t lastStation = config.lastStation();
+  if(config.getMode()==PM_WEB || !config.store.sdsnuffle){
+    if (lastStation == config.store.countStation) config.lastStation(1); else config.lastStation(lastStation+1);
   }else{
-    config.store.lastStation = random(1, config.store.countStation);
+    config.lastStation(random(1, config.store.countStation));
   }
-  sendCommand({PR_PLAY, config.store.lastStation});
+  sendCommand({PR_PLAY, config.lastStation()});
 }
 
 void Player::toggle() {
   if (_status == PLAYING) {
     sendCommand({PR_STOP, 0});
   } else {
-    sendCommand({PR_PLAY, config.store.lastStation});
+    sendCommand({PR_PLAY, config.lastStation()});
   }
 }
 

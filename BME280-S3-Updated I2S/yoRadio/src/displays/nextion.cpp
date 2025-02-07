@@ -55,8 +55,8 @@ void Nextion::begin(bool dummy) {
 }
 
 void Nextion::start(){
-	Serial.print("##[BOOT]#\tNextion.start\t");
-	delay(100);
+  Serial.print("##[BOOT]#\tNextion.start\t");
+  delay(100);
   if (network.status != CONNECTED) {
     apScreen();
     return;
@@ -271,12 +271,10 @@ void Nextion::loop() {
           network.forceTimeSync = true;
         }
         if (sscanf(rxbuf, "audioinfo=%d", &scanDigit) == 1){
-          config.store.audioinfo = scanDigit;
-          config.save();
+          config.saveValue(&config.store.audioinfo, static_cast<bool>(scanDigit));
         }
         if (sscanf(rxbuf, "smartstart=%d", &scanDigit) == 1){
-          config.store.smartstart = scanDigit==0?2:1;
-          config.save();
+          config.saveValue(&config.store.smartstart, static_cast<uint8_t>(scanDigit==0?2:1));
         }
         if (sscanf(rxbuf, "addssid=%s", scanBuf) == 1){
           wifisettings+=(String(scanBuf)+"\t");
@@ -296,9 +294,15 @@ void Nextion::drawVU(){
   //if(mode!=PLAYER) return;
   if(mode!=PLAYER && mode!=VOL) return;
   static uint8_t measL, measR;
-  player.getVUlevel();
-  uint8_t L = map(player.vuLeft, 0, 255, 0, 100);
-  uint8_t R = map(player.vuRight, 0, 255, 0, 100);
+  //player.getVUlevel();
+  
+  uint16_t vulevel = player.get_VUlevel((uint16_t)100);
+  
+  uint8_t L = (vulevel >> 8) & 0xFF;
+  uint8_t R = vulevel & 0xFF;
+  
+  //uint8_t L = map(player.vuLeft, 0, 255, 0, 100);
+  //uint8_t R = map(player.vuRight, 0, 255, 0, 100);
   if(player.isRunning()){
     measL=(L<=measL)?measL-5:L;
     measR=(R<=measR)?measR-5:R;
@@ -433,18 +437,18 @@ void Nextion::localTime(struct tm timeinfo){
 }
 
 void Nextion::printPLitem(uint8_t pos, const char* item){
-	char cmd[60]={0};
-	snprintf(cmd, sizeof(cmd) - 1, "t%d.txt=\"%s\"", pos, nextion.utf8Rus((char*)item, true));
+  char cmd[60]={0};
+  snprintf(cmd, sizeof(cmd) - 1, "t%d.txt=\"%s\"", pos, nextion.utf8Rus((char*)item, true));
   putcmd(cmd);
 }
 
 void Nextion::drawPlaylist(uint16_t currentPlItem){
-	mode=STATIONS;
+  mode=STATIONS;
   uint8_t lastPos = config.fillPlMenu(currentPlItem - 3, 7, true);
   if(lastPos<7){
-  	for(int i=0;i<7-lastPos;i++){
-  		nextion.printPLitem(lastPos+i, "");
-  	}
+    for(int i=0;i<7-lastPos;i++){
+      nextion.printPLitem(lastPos+i, "");
+    }
   }
   _volDelay = millis();
 }
@@ -460,7 +464,7 @@ void Nextion::swichMode(displayMode_e newmode){
     _volDelay = millis();
   }
   if (newmode == mode) {
-  	return;
+    return;
   }
   mode = newmode;
 #ifdef DUMMYDISPLAY
@@ -489,9 +493,9 @@ void Nextion::swichMode(displayMode_e newmode){
   if (newmode == STATIONS) {
     putcmd("page playlist");
 #ifdef DUMMYDISPLAY
-    display.currentPlItem = config.store.lastStation;
+    display.currentPlItem = config.lastStation();
 #endif
-    drawPlaylist(config.store.lastStation);
+    drawPlaylist(config.lastStation());
   }
 }
 
