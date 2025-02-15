@@ -55,8 +55,10 @@ const FillConfig  heapbarConf     PROGMEM = {{ TFT_FRAMEWDT, 235, 0, WA_LEFT }, 
 /* WIDGETS  */                           /* { left, top, fontsize, align } */
 const WidgetConfig bootstrConf    PROGMEM = { 0, 188, 1, WA_CENTER };
 const WidgetConfig bitrateConf    PROGMEM = { TFT_FRAMEWDT, 20,  1, WA_RIGHT};
-const WidgetConfig voltxtConf     PROGMEM = {  TFT_FRAMEWDT, 214,  1, WA_CENTER };
-const WidgetConfig  iptxtConf     PROGMEM = { TFT_FRAMEWDT, 208, 2, WA_LEFT };
+//const WidgetConfig voltxtConf     PROGMEM = {  TFT_FRAMEWDT, 214,  1, WA_CENTER };
+const WidgetConfig voltxtConf     PROGMEM = { TFT_FRAMEWDT, 208, 2, WA_LEFT };
+//const WidgetConfig  iptxtConf     PROGMEM = { TFT_FRAMEWDT, 208, 2, WA_LEFT };
+const WidgetConfig  iptxtConf     PROGMEM = { TFT_FRAMEWDT, 208, 2, WA_CENTER };
 const WidgetConfig   rssiConf     PROGMEM = { TFT_FRAMEWDT, 208, 2, WA_RIGHT };
 const WidgetConfig numConf        PROGMEM = {  0, 150,  52, WA_CENTER };
 const WidgetConfig apNameConf     PROGMEM = { TFT_FRAMEWDT, 66, 2, WA_CENTER };
@@ -79,8 +81,8 @@ const char         numtxtFmt[]    PROGMEM = "%d";
 const char           rssiFmt[]    PROGMEM = "WiFi %d";
 //const char          iptxtFmt[]    PROGMEM = "\010 %s";
 const char          iptxtFmt[]    PROGMEM = "%s";
-//const char         voltxtFmt[]    PROGMEM = "\023\025%d";
-const char         voltxtFmt[]    PROGMEM = "";
+const char         voltxtFmt[]    PROGMEM = "\023\025%d";
+//const char         voltxtFmt[]    PROGMEM = "";
 const char        bitrateFmt[]    PROGMEM = "%d kBs";
 
 /* MOVES  */                             /* { left, top, width (0 - auto, -1 - lock )} */
